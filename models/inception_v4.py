@@ -337,5 +337,5 @@ if __name__ == '__main__':
     model = inceptionv4(num_classes=11)
     input = torch.autograd.Variable(torch.randn(2, 3, 299, 299))
     y = model(input)
-    print y.size()
+    print(y.size())
     # #

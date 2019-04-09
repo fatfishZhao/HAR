@@ -7,8 +7,55 @@ from sklearn.utils import shuffle
 
 __all__ = ['Compose','RandomHflip', 'RandomUpperCrop', 'Resize', 'UpperCrop', 'RandomBottomCrop',"RandomErasing",
            'BottomCrop', 'Normalize', 'RandomSwapChannels', 'RandomRotate', 'RandomHShift',"CenterCrop","RandomVflip",
-           'ExpandBorder', 'RandomResizedCrop','RandomDownCrop', 'DownCrop', 'ResizedCrop',"FixRandomRotate"]
-
+           'ExpandBorder', 'RandomResizedCrop','RandomDownCrop', 'DownCrop', 'ResizedCrop',"FixRandomRotate","sensor_to3d",
+           "sensor_transpose","sensor_to14row","fft", "sensor_transpose1d"]
+class sensor_to3d(object):
+    def __init__(self,mode):
+        self.mode = mode
+    def __call__(self, data):
+        '''
+        :param data: length * 6
+        '''
+        data = data.reshape(data.shape[0], 2, 3)
+        return data
+class sensor_to14row(object):
+    def __init__(self, mode):
+        self.model = mode
+    def __call__(self, data):
+        '''
+        :param data: length * 6
+        '''
+        # transform order: 12345613514624
+        data = np.hstack((data, data[:,[0,2,4,0,3,5,1,3]]))
+        data = data[:,:,np.newaxis]
+        data = np.concatenate((data,data,data), axis=2)
+        return data
+class fft(object):
+    def __init__(self, mode):
+        self.mode = mode
+    def __call__(self, data):
+        new_data = np.abs(np.fft.fft2(data[:,:,0]))
+        new_data = new_data[:,:,np.newaxis]
+        new_data = np.concatenate((new_data,new_data,new_data), axis=2)
+        return new_data
+class sensor_transpose(object):
+    def __init__(self,mode):
+        self.mode = mode
+    def __call__(self, data):
+        '''
+        :param data: 256 * 256 * 3
+        '''
+        data = data.transpose((2,0,1))
+        return data
+class sensor_transpose1d(object):
+    def __init__(self,mode):
+        self.mode = mode
+    def __call__(self, data):
+        '''
+        :param data: 256 * 6
+        '''
+        data = data.transpose((1,0))
+        return data
 def rotate_nobound(image, angle, center=None, scale=1.):
     (h, w) = image.shape[:2]
 
@@ -693,8 +740,8 @@ if __name__ == '__main__':
     img = cv2.cvtColor(cv2.imread(img_path),cv2.COLOR_BGR2RGB)
     img_trans,_ = trans(img,5)
     # img_trans2,_ = trans(img,6)
-    print img_trans.max(), img_trans.min()
-    print img_trans.dtype
+    print(img_trans.max(), img_trans.min())
+    print(img_trans.dtype)
 
     plt.figure()
     plt.subplot(221)

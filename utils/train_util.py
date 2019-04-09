@@ -67,11 +67,11 @@ def train(model,
             if step % print_inter == 0:
                 _, preds = torch.max(outputs, 1)
 
-                batch_corrects = torch.sum((preds == labels)).data[0]
+                batch_corrects = (preds == labels).data.sum()
+                # batch_acc = batch_corrects.data.cpu().numpy() / (labels.size(0))
                 batch_acc = batch_corrects / (labels.size(0))
-
                 logging.info('%s [%d-%d] | batch-loss: %.3f | acc@1: %.3f'
-                             % (dt(), epoch, batch_cnt, loss.data[0], batch_acc))
+                             % (dt(), epoch, batch_cnt, loss.data.cpu().numpy()[0], batch_acc))
 
 
             if step % val_inter == 0:
@@ -104,12 +104,13 @@ def train(model,
                     _, preds = torch.max(outputs, 1)
 
                     # statistics
-                    val_loss += loss.data[0]
-                    batch_corrects = torch.sum((preds == labels)).data[0]
+                    val_loss += loss.data.cpu().numpy()[0]
+                    batch_corrects = (preds == labels).data.sum()
                     val_corrects += batch_corrects
 
                 val_loss = val_loss / val_size
-                val_acc = 1.0 * val_corrects / len(data_set['val'])
+                # val_acc = val_corrects.data.cpu().numpy() / len(data_set['val'])
+                val_acc = val_corrects / len(data_set['val'])
 
                 t1 = time.time()
                 since = t1-t0
